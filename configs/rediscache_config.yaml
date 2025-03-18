@@ -1,0 +1,8 @@
+cache:
+  usage_cache_db:
+    host: "localhost"
+    port: "6379"
+    password: "mystrongpassword"
+    database: "0"
+    ssl_mode: "disable"
+    pool_max_connections: 6
