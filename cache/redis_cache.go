@@ -1,8 +1,9 @@
 package redis_cache
 
 import (
+	"context"
 	"fmt"
-	"log"
+	"time"
 
 	"github.com/redis/rueidis"
 )
@@ -15,7 +16,7 @@ import (
 // Initialize creates a new Redis connection pool.
 // It can be called without arguments to use the default config path,
 // or with a custom config file path.
-func Initialize(configFilePath ...string) (*rueidis.Client, error) {
+func InitializeCacheConnection(configFilePath ...string) (rueidis.Client, error) {
 	// Use default path if none provided
 	path := DefaultConfigPath
 	if len(configFilePath) > 0 && configFilePath[0] != "" {
@@ -62,19 +63,41 @@ func Initialize(configFilePath ...string) (*rueidis.Client, error) {
 		DisableAutoPipelining: config.Cache.Usage_Cache_DB.Auto_Pipelining_Mode,
 	})
 	if err != nil {
-		log.Fatalf("failed to create Redis client: %v", err)
+		return nil, fmt.Errorf("failed to create Redis client: %v", err)
 	}
 	fmt.Println("Connected to Redis!")
 
-	return &client, nil
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Perform a health check
+	if err := client.Do(ctx, client.B().Ping().Build()).Error(); err != nil {
+		return nil, fmt.Errorf("Redis health check failed: %v", err)
+	}
+	fmt.Println("Redis is healthy!")
+
+	return client, nil
 
 }
 
-type RedisConnectionClient struct {
-	// Define the fields for your Redis connection pool here
-	client *rueidis.Client
+func SetStringDataToCache(ctx context.Context, client rueidis.Client, key string, value string, expiry int64) error {
+	// Set the data in cache with the expiry time
+	err := client.Do(ctx, client.B().Set().Key(key).Value(value).ExSeconds(expiry).Build()).Error()
+	if err != nil {
+		return fmt.Errorf("failed to set data to cache: %v", err)
+	}
+	return nil
 }
 
-func (client *RedisConnectionClient) SetDataToCache() {}
+func GetStringDataFromCache(ctx context.Context, client rueidis.Client, key string) (string, error) {
+	resp, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
+	if err != nil {
+		return "", fmt.Errorf("failed to get data from cache: %v", err)
+	}
+	return resp, nil
+}
 
-func (client *RedisConnectionClient) GetDataFromCache() {}
+func Close(client rueidis.Client) {
+	client.Close()
+	fmt.Println("Redis connection closed!")
+}
