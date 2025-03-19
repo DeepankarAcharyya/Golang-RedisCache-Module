@@ -1,18 +1,21 @@
 package redis_cache
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+
+	"github.com/redis/rueidis"
+)
 
 // This file contains the following methods :
 // 1. Method to establish a connection pool with a redis cache
 // 2. Method to set data to cache - with the option to add expiry
 // 3. Method to get data from cache
 
-const DefaultConfigPath = "configs/rediscache_config.yaml"
-
 // Initialize creates a new Redis connection pool.
 // It can be called without arguments to use the default config path,
 // or with a custom config file path.
-func Initialize(configFilePath ...string) (*RedisConnectionPool, error) {
+func Initialize(configFilePath ...string) (*rueidis.Client, error) {
 	// Use default path if none provided
 	path := DefaultConfigPath
 	if len(configFilePath) > 0 && configFilePath[0] != "" {
@@ -45,13 +48,33 @@ func Initialize(configFilePath ...string) (*RedisConnectionPool, error) {
 	// DisableAutoPipelining					// DisableAutoPipelining is used to disable the auto pipelining. So that it will use classic connection pooling approach.
 	//}
 
+	_redis_cache_host := fmt.Sprintf("%s:%s", config.Cache.Usage_Cache_DB.Host, config.Cache.Usage_Cache_DB.Port)
+	init_address := []string{_redis_cache_host}
+
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:           init_address,                         // Redis server address
+		Password:              config.Cache.Usage_Cache_DB.Password, // Redis password
+		SelectDB:              config.Cache.Usage_Cache_DB.Database, // Redis database number
+		DisableCache:          config.Cache.Usage_Cache_DB.DisableClientSideCache,
+		BlockingPoolCleanup:   config.Cache.Usage_Cache_DB.Pool_Max_Idle_Time,
+		BlockingPoolMinSize:   config.Cache.Usage_Cache_DB.Pool_Min_Connections,
+		BlockingPoolSize:      config.Cache.Usage_Cache_DB.Pool_Max_Connections,
+		DisableAutoPipelining: config.Cache.Usage_Cache_DB.Auto_Pipelining_Mode,
+	})
+	if err != nil {
+		log.Fatalf("failed to create Redis client: %v", err)
+	}
+	fmt.Println("Connected to Redis!")
+
+	return &client, nil
+
 }
 
-type RedisConnectionPool struct {
+type RedisConnectionClient struct {
 	// Define the fields for your Redis connection pool here
-
+	client *rueidis.Client
 }
 
-func SetDataToCache() {}
+func (client *RedisConnectionClient) SetDataToCache() {}
 
-func GetDataFromCache() {}
+func (client *RedisConnectionClient) GetDataFromCache() {}
