@@ -15,8 +15,25 @@ type CacheConnectionConfig struct {
 			Database             string `yaml:"database"`
 			SSL_Mode             string `yaml:"ssl_mode"`
 			Pool_Max_Connections int    `yaml:"pool_max_connections"`
+			Auto_Pipelining_Mode bool   `yaml:"auto_pipelining_mode"`
 		} `yaml:"usage_cache_db"`
 	} `yaml:"cache"`
+}
+
+// setDefaults sets default values for fields that are empty
+func (c *CacheConnectionConfig) setDefaults() {
+	if c.Cache.Usage_Cache_DB.Port == "" {
+		c.Cache.Usage_Cache_DB.Port = "6379"
+	}
+	if c.Cache.Usage_Cache_DB.Database == "" {
+		c.Cache.Usage_Cache_DB.Database = "0"
+	}
+	if c.Cache.Usage_Cache_DB.SSL_Mode == "" {
+		c.Cache.Usage_Cache_DB.SSL_Mode = "disable"
+	}
+	if !c.Cache.Usage_Cache_DB.Auto_Pipelining_Mode {
+		c.Cache.Usage_Cache_DB.Auto_Pipelining_Mode = false
+	}
 }
 
 func LoadCacheConfigFromFile(yaml_config_file_path string) (*CacheConnectionConfig, error) {
@@ -29,6 +46,8 @@ func LoadCacheConfigFromFile(yaml_config_file_path string) (*CacheConnectionConf
 	if err = yaml.Unmarshal(data, &cache_pool_config); err != nil {
 		return nil, err
 	}
+
+	cache_pool_config.setDefaults()
 
 	return &cache_pool_config, nil
 }
