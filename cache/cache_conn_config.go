@@ -9,13 +9,15 @@ import (
 type CacheConnectionConfig struct {
 	Cache struct {
 		Usage_Cache_DB struct {
-			Host                 string `yaml:"host"`
-			Port                 string `yaml:"port"`
-			Password             string `yaml:"password"`
-			Database             string `yaml:"database"`
-			SSL_Mode             string `yaml:"ssl_mode"`
-			Pool_Max_Connections int    `yaml:"pool_max_connections"`
-			Auto_Pipelining_Mode bool   `yaml:"auto_pipelining_mode"`
+			Host                   string `yaml:"host"`
+			Port                   string `yaml:"port"`
+			Password               string `yaml:"password"`
+			Database               string `yaml:"database"`
+			Pool_Max_Connections   int    `yaml:"pool_max_connections"`
+			Pool_Min_Connections   int    `yaml:"pool_min_connections"`
+			Auto_Pipelining_Mode   bool   `yaml:"auto_pipelining_mode"`
+			DisableClientSideCache bool   `yaml:"disable_cache"`
+			Pool_Max_Idle_Time     string `yaml:"pool_max_idle_time"`
 		} `yaml:"usage_cache_db"`
 	} `yaml:"cache"`
 }

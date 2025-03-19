@@ -38,11 +38,11 @@ func Initialize(configFilePath ...string) (*RedisConnectionPool, error) {
 	// 	InitAddress: []string{"127.0.0.1:6379"}, // Redis server address
 	// 	Password:    "mystrongpassword",         // Redis password
 	// 	SelectDB:    0,                          // Redis database number
-	// 	BlockingPoolCleanup						// BlockingPoolCleanup is the duration for cleaning up idle connections.
-	// 	BlockingPoolMinSize
-	// 	BlockingPoolMaxSize
-	// DisableCache
-	// DisableAutoPipelining
+	// 	BlockingPoolCleanup						 // BlockingPoolCleanup is the duration for cleaning up idle connections.
+	// 	BlockingPoolMinSize						 // BlockingPoolMinSize is the minimum number of connections in the pool.
+	// 	BlockingPoolMaxSize						// BlockingPoolMaxSize is the maximum number of connections in the pool.
+	// DisableCache								// DisableCache is used to disable the client side cache.
+	// DisableAutoPipelining					// DisableAutoPipelining is used to disable the auto pipelining. So that it will use classic connection pooling approach.
 	//}
 
 }
