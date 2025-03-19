@@ -1,4 +1,7 @@
-// v1 : simple script to connect to redis and do a ping - healthcheck
+// v1 : simple script to connect to redis and do a ping - healthcheck -- DONE
+// v2 : create a connection pool -- DONE
+// v3 : create the functions to set and get values -- DONE
+// v4 : create the functions to set and get values with expiration -- DONE
 
 package main
 
@@ -8,43 +11,45 @@ import (
 	"log"
 	"time"
 
-	"github.com/redis/rueidis"
+	redis_cache "github.com/DeepankarAcharyya/Golang-RedisCache-Module/cache"
 )
 
 func main() {
-	// Initialize the Redis client with connection pooling
-	client, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{"127.0.0.1:6379"}, // Redis server address
-		Password:    "mystrongpassword",         // Redis password
-		SelectDB:    0,                          // Redis database number
-	})
+	// Initialize the Redis client with connection pooling using default config path
+	client, err := redis_cache.InitializeCacheConnection()
 	if err != nil {
 		log.Fatalf("failed to create Redis client: %v", err)
 	}
-	fmt.Println("Connected to Redis!")
 
 	// Make sure to clean up the client after use
-	defer client.Close()
+	defer redis_cache.Close(client)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Perform a health check
-	if err := client.Do(ctx, client.B().Ping().Build()).Error(); err != nil {
-		log.Fatalf("Redis health check failed: %v", err)
-	}
-	fmt.Println("Redis is healthy!")
-
-	// Set a key-value pair
-	err = client.Do(ctx, client.B().Set().Key("key").Value("value").Nx().Build()).Error()
+	// Set a string key-value pair with 1 hour expiry
+	err = redis_cache.SetStringDataToCache(ctx, client, "string-key", "test-value", 3600)
 	if err != nil {
-		log.Fatalf("could not set key: %v", err)
+		log.Fatalf("could not set string key: %v", err)
 	}
 
-	// Retrieve the value
-	resp, err := client.Do(ctx, client.B().Get().Key("key").Build()).ToString()
+	// Retrieve the string value
+	stringValue, err := redis_cache.GetStringDataFromCache(ctx, client, "string-key")
 	if err != nil {
-		log.Fatalf("could not get key: %v", err)
+		log.Fatalf("could not get string key: %v", err)
 	}
-	fmt.Println("Value:", resp)
+	fmt.Println("String Value:", stringValue)
+
+	// Set an integer key-value pair with 30 minutes expiry
+	err = redis_cache.SetIntDataToCache(ctx, client, "int-key", 42, 1800)
+	if err != nil {
+		log.Fatalf("could not set int key: %v", err)
+	}
+
+	// Retrieve the integer value
+	intValue, err := redis_cache.GetIntDataFromCache(ctx, client, "int-key")
+	if err != nil {
+		log.Fatalf("could not get int key: %v", err)
+	}
+	fmt.Println("Integer Value:", intValue)
 }

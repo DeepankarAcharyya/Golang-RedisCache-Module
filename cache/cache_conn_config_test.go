@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestLoadCacheConfigFromFile(t *testing.T) {
@@ -22,9 +23,12 @@ cache:
     host: "test-host"
     port: "6379"
     password: "test-pass"
-    database: "0"
-    ssl_mode: "disable"
+    database: 0
     pool_max_connections: 10
+    pool_min_connections: 2
+    auto_pipelining_mode: true
+    disable_cache: false
+    pool_max_idle_time: 5400s
 `,
 			wantErr: false,
 			validate: func(cfg *CacheConnectionConfig) error {
@@ -37,11 +41,51 @@ cache:
 				if cfg.Cache.Usage_Cache_DB.Password != "test-pass" {
 					t.Errorf("expected password to be 'test-pass', got %s", cfg.Cache.Usage_Cache_DB.Password)
 				}
-				if cfg.Cache.Usage_Cache_DB.Database != "0" {
-					t.Errorf("expected database to be '0', got %s", cfg.Cache.Usage_Cache_DB.Database)
+				if cfg.Cache.Usage_Cache_DB.Database != 0 {
+					t.Errorf("expected database to be 0, got %d", cfg.Cache.Usage_Cache_DB.Database)
 				}
 				if cfg.Cache.Usage_Cache_DB.Pool_Max_Connections != 10 {
 					t.Errorf("expected pool_max_connections to be 10, got %d", cfg.Cache.Usage_Cache_DB.Pool_Max_Connections)
+				}
+				if cfg.Cache.Usage_Cache_DB.Pool_Min_Connections != 2 {
+					t.Errorf("expected pool_min_connections to be 2, got %d", cfg.Cache.Usage_Cache_DB.Pool_Min_Connections)
+				}
+				if !cfg.Cache.Usage_Cache_DB.Auto_Pipelining_Mode {
+					t.Error("expected auto_pipelining_mode to be true")
+				}
+				if cfg.Cache.Usage_Cache_DB.DisableClientSideCache {
+					t.Error("expected disable_cache to be false")
+				}
+				if cfg.Cache.Usage_Cache_DB.Pool_Max_Idle_Time != 5400*time.Second {
+					t.Errorf("expected pool_max_idle_time to be 5400s, got %v", cfg.Cache.Usage_Cache_DB.Pool_Max_Idle_Time)
+				}
+				return nil
+			},
+		},
+		{
+			name: "minimal configuration with defaults",
+			yamlContent: `
+cache:
+  usage_cache_db:
+    host: "test-host"
+`,
+			wantErr: false,
+			validate: func(cfg *CacheConnectionConfig) error {
+				if cfg.Cache.Usage_Cache_DB.Host != "test-host" {
+					t.Errorf("expected host to be 'test-host', got %s", cfg.Cache.Usage_Cache_DB.Host)
+				}
+				// Check defaults
+				if cfg.Cache.Usage_Cache_DB.Port != "6379" {
+					t.Errorf("expected default port to be '6379', got %s", cfg.Cache.Usage_Cache_DB.Port)
+				}
+				if cfg.Cache.Usage_Cache_DB.Auto_Pipelining_Mode {
+					t.Error("expected default auto_pipelining_mode to be false")
+				}
+				if !cfg.Cache.Usage_Cache_DB.DisableClientSideCache {
+					t.Error("expected default disable_cache to be true")
+				}
+				if cfg.Cache.Usage_Cache_DB.Pool_Max_Idle_Time != 60*60*time.Second {
+					t.Errorf("expected default pool_max_idle_time to be 1h, got %v", cfg.Cache.Usage_Cache_DB.Pool_Max_Idle_Time)
 				}
 				return nil
 			},
@@ -55,24 +99,6 @@ invalid:
 `,
 			wantErr: true,
 			validate: func(cfg *CacheConnectionConfig) error {
-				return nil
-			},
-		},
-		{
-			name: "missing required fields",
-			yamlContent: `
-cache:
-  usage_cache_db:
-    host: "test-host"
-`,
-			wantErr: false,
-			validate: func(cfg *CacheConnectionConfig) error {
-				if cfg.Cache.Usage_Cache_DB.Host != "test-host" {
-					t.Errorf("expected host to be 'test-host', got %s", cfg.Cache.Usage_Cache_DB.Host)
-				}
-				if cfg.Cache.Usage_Cache_DB.Port != "" {
-					t.Errorf("expected port to be empty, got %s", cfg.Cache.Usage_Cache_DB.Port)
-				}
 				return nil
 			},
 		},
