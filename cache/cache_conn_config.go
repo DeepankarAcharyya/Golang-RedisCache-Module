@@ -38,7 +38,7 @@ func (c *CacheConnectionConfig) setDefaults() {
 		c.Cache.Usage_Cache_DB.DisableClientSideCache = true
 	}
 	if c.Cache.Usage_Cache_DB.Pool_Max_Idle_Time == 0 {
-		c.Cache.Usage_Cache_DB.Pool_Max_Idle_Time = 90 * 60 * time.Second
+		c.Cache.Usage_Cache_DB.Pool_Max_Idle_Time = 60 * 60 * time.Second // By default setting the max idle time to 1hr
 	}
 }
 

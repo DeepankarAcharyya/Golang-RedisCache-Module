@@ -40,7 +40,7 @@ func Initialize(configFilePath ...string) (*RedisConnectionPool, error) {
 	// 	SelectDB:    0,                          // Redis database number
 	// 	BlockingPoolCleanup						 // BlockingPoolCleanup is the duration for cleaning up idle connections.
 	// 	BlockingPoolMinSize						 // BlockingPoolMinSize is the minimum number of connections in the pool.
-	// 	BlockingPoolMaxSize						// BlockingPoolMaxSize is the maximum number of connections in the pool.
+	// 	BlockingPoolSize						// BlockingPoolMaxSize is the maximum number of connections in the pool.
 	// DisableCache								// DisableCache is used to disable the client side cache.
 	// DisableAutoPipelining					// DisableAutoPipelining is used to disable the auto pipelining. So that it will use classic connection pooling approach.
 	//}
