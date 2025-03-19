@@ -3,6 +3,7 @@ package redis_cache
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/redis/rueidis"
@@ -92,9 +93,44 @@ func SetStringDataToCache(ctx context.Context, client rueidis.Client, key string
 func GetStringDataFromCache(ctx context.Context, client rueidis.Client, key string) (string, error) {
 	resp, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
 	if err != nil {
-		return "", fmt.Errorf("failed to get data from cache: %v", err)
+		if rueidis.IsRedisNil(err) {
+			return "", nil
+		} else {
+			return "", fmt.Errorf("failed to get data from cache: %v", err)
+		}
 	}
 	return resp, nil
+}
+
+func SetIntDataToCache(ctx context.Context, client rueidis.Client, key string, value int, expiry int64) error {
+	// Convert the int value to string
+	strvalue := strconv.Itoa(value)
+
+	// Set the data in cache with the expiry time
+	err := client.Do(ctx, client.B().Set().Key(key).Value(strvalue).ExSeconds(expiry).Build()).Error()
+	if err != nil {
+		return fmt.Errorf("failed to set data to cache: %v", err)
+	}
+	return nil
+}
+
+func GetIntDataFromCache(ctx context.Context, client rueidis.Client, key string) (int, error) {
+	resp, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
+	if err != nil {
+		// returns neg integers if there is any error
+		if rueidis.IsRedisNil(err) {
+			return -1, nil
+		} else {
+			return -2, fmt.Errorf("failed to get data from cache: %v", err)
+		}
+	}
+
+	// Convert string back to int
+	value, err := strconv.Atoi(resp)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert cache value to int: %v", err)
+	}
+	return value, nil
 }
 
 func Close(client rueidis.Client) {
