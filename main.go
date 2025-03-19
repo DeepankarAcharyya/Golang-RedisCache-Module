@@ -1,8 +1,7 @@
 // v1 : simple script to connect to redis and do a ping - healthcheck -- DONE
-// v2 : create a connection pool
-// v3 : create the functions to set and get values
-// v4 : create the functions to set and get values with expiration
-// v5 : create the serdes module with support for timestamp, dictionary, list, set, zset
+// v2 : create a connection pool -- DONE
+// v3 : create the functions to set and get values -- DONE
+// v4 : create the functions to set and get values with expiration -- DONE
 
 package main
 

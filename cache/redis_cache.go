@@ -82,10 +82,20 @@ func InitializeCacheConnection(configFilePath ...string) (rueidis.Client, error)
 }
 
 func SetStringDataToCache(ctx context.Context, client rueidis.Client, key string, value string, expiry int64) error {
-	// Set the data in cache with the expiry time
-	err := client.Do(ctx, client.B().Set().Key(key).Value(value).ExSeconds(expiry).Build()).Error()
-	if err != nil {
-		return fmt.Errorf("failed to set data to cache: %v", err)
+	if expiry == 0 {
+		// Set the data in cache without the expiry time
+		err := client.Do(ctx, client.B().Set().Key(key).Value(value).Build()).Error()
+		if err != nil {
+			return fmt.Errorf("failed to set data to cache: %v", err)
+		}
+	} else if expiry > 0 {
+		// Set the data in cache with the expiry time
+		err := client.Do(ctx, client.B().Set().Key(key).Value(value).ExSeconds(expiry).Build()).Error()
+		if err != nil {
+			return fmt.Errorf("failed to set data to cache: %v", err)
+		}
+	} else {
+		return fmt.Errorf("expiry time must be greater than 0")
 	}
 	return nil
 }
@@ -106,10 +116,20 @@ func SetIntDataToCache(ctx context.Context, client rueidis.Client, key string, v
 	// Convert the int value to string
 	strvalue := strconv.Itoa(value)
 
-	// Set the data in cache with the expiry time
-	err := client.Do(ctx, client.B().Set().Key(key).Value(strvalue).ExSeconds(expiry).Build()).Error()
-	if err != nil {
-		return fmt.Errorf("failed to set data to cache: %v", err)
+	if expiry == 0 {
+		// Set the data in cache without the expiry time
+		err := client.Do(ctx, client.B().Set().Key(key).Value(strvalue).Build()).Error()
+		if err != nil {
+			return fmt.Errorf("failed to set data to cache: %v", err)
+		}
+	} else if expiry > 0 {
+		// Set the data in cache with the expiry time
+		err := client.Do(ctx, client.B().Set().Key(key).Value(strvalue).ExSeconds(expiry).Build()).Error()
+		if err != nil {
+			return fmt.Errorf("failed to set data to cache: %v", err)
+		}
+	} else {
+		return fmt.Errorf("expiry time must be greater than 0")
 	}
 	return nil
 }
