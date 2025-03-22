@@ -13,11 +13,3 @@ type CacheDataUnit struct {
 	Data                CustomDataType
 	LastUpdateTimestamp time.time
 }
-
-func (c *CacheDataUnit) Serialize() (error, []byte) {
-	return nil, nil
-}
-
-func Desiarlize() (error, CacheDataUnit) {
-	return nil, CacheDataUnit{}
-}
