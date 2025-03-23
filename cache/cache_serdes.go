@@ -1,9 +1,11 @@
 package redis_cache
 
-func Serialize() (error, []byte) {
-	return nil, nil
+import "github.com/vmihailenco/msgpack"
+
+func (c *CacheDataUnit) Serialize(data CacheDataUnit) ([]byte, error) {
+	return msgpack.Marshal(data)
 }
 
-func Desiarlize() (error, CacheDataUnit) {
-	return nil, CacheDataUnit{}
+func Desiarlize(data []byte, output_data interface{}) error {
+	return msgpack.Unmarshal(data, output_data)
 }
